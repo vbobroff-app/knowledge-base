@@ -1,0 +1,63 @@
+### **Удаление ресурсов**
+Безопасный подход
+
+Просмотр всех ресурсов
+```bash
+terraform state list
+```
+
+
+Важные моменты: </br>
+✅ Всегда сначала plan -destroy - никогда не запускайте destroy без просмотра плана
+
+✅ Проверяйте зависимости - удаление сети может каскадно удалить подсети
+
+✅ Сохраняйте планы - полезно для аудита и отката
+
+❌ Не игнорируйте предупреждения - особенно про данные, которые не восстанавливаются
+
+Пример безопасного подхода:
+```bash
+# 1. Проверяем
+terraform plan -destroy -out=check.plan
+
+# 2. Изучаем
+terraform show check.plan
+
+# 3. Подтверждаем (если всё ок)
+terraform apply check.plan
+
+# ИЛИ отменяем (если что-то не так)
+rm check.plan
+```
+Пример удалени конкретных ресурсов (сети и подсети)
+```bash
+# 1. Смотрим текущее состояние
+terraform state list
+
+#2. Составляем план удаления
+terraform plan -destroy \
+  -target=yandex_vpc_network.vpn_network \
+  -target=yandex_vpc_subnet.vpn_subnet
+
+# С сохранением в файл
+terraform plan -destroy \
+  -target=yandex_vpc_network.vpn_network \
+  -target=yandex_vpc_subnet.vpn_subnet \
+  -out=network-destroy.plan
+
+# 3. Удаляем  сети
+terraform destroy -target=yandex_vpc_network.vpn_network \
+                 -target=yandex_vpc_subnet.vpn_subnet
+
+# 4. Редактируем terraform файлы
+# 5. Применяем изменения
+terraform plan
+terraform apply
+```
+<br>
+
+```bash
+terraform state list
+```
+
